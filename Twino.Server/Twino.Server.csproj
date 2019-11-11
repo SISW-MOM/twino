@@ -15,7 +15,7 @@
     <PackageTags>twino, websocket, server, http, tcp, lightweight, mq</PackageTags>
     <AssemblyVersion>1.5.2</AssemblyVersion>
     <FileVersion>1.5.2</FileVersion>
-    <PackageVersion>1.5.2</PackageVersion>
+    <PackageVersion>1.5.1.2</PackageVersion>
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
