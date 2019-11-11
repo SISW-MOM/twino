@@ -168,7 +168,7 @@ namespace Twino.Core.Http
         public async Task SetStreamAsync(Stream newStream, bool suppress, bool disposeOldStream)
         {
             if (disposeOldStream && ResponseStream != null)
-                await ResponseStream.DisposeAsync();
+                ResponseStream.Dispose();
 
             ResponseStream = newStream;
 
@@ -219,7 +219,8 @@ namespace Twino.Core.Http
         {
             ContentType = ContentTypes.APPLICATION_JSON;
             StatusCode = HttpStatusCode.OK;
-            await System.Text.Json.JsonSerializer.SerializeAsync(ResponseStream, model, model.GetType());
+            string serialized = JsonConvert.SerializeObject(model);
+            await ResponseStream.WriteAsync(Encoding.UTF8.GetBytes(serialized));
         }
 
         #endregion

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/mhelvacikoylu/twino.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/mhelvacikoylu/twino</PackageProjectUrl>
@@ -14,7 +14,7 @@
     <FileVersion>1.5.2</FileVersion>
     <Version>3.2.0</Version>
     <PackageVersion>1.5.2</PackageVersion>
-    <LangVersion>8</LangVersion>
+    <LangVersion>7.3</LangVersion>
     <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 

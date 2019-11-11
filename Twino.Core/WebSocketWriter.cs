@@ -15,16 +15,18 @@ namespace Twino.Core
         /// </summary>
         public static byte[] CreateFromUTF8(string message)
         {
-            using MemoryStream ms = new MemoryStream();
-            //fin and op code
-            ms.WriteByte(0x81);
-            byte[] msg = Encoding.UTF8.GetBytes(message);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                //fin and op code
+                ms.WriteByte(0x81);
+                byte[] msg = Encoding.UTF8.GetBytes(message);
 
-            //message length
-            WriteLength(ms, msg.Length);
+                //message length
+                WriteLength(ms, msg.Length);
 
-            ms.Write(msg, 0, msg.Length);
-            return ms.ToArray();
+                ms.Write(msg, 0, msg.Length);
+                return ms.ToArray();
+            }
         }
 
         /// <summary>
@@ -32,50 +34,56 @@ namespace Twino.Core
         /// </summary>
         public static async Task<byte[]> CreateFromUTF8Async(string message)
         {
-            await using MemoryStream ms = new MemoryStream();
-            
-            //fin and op code
-            ms.WriteByte(0x81);
-            byte[] msg = Encoding.UTF8.GetBytes(message);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                //fin and op code
+                ms.WriteByte(0x81);
+                byte[] msg = Encoding.UTF8.GetBytes(message);
 
-            //message length
-            await WriteLengthAsync(ms, msg.Length);
+                //message length
+                await WriteLengthAsync(ms, msg.Length);
 
-            await ms.WriteAsync(msg, 0, msg.Length);
-            return ms.ToArray();
+                await ms.WriteAsync(msg, 0, msg.Length);
+                return ms.ToArray();
+            }
         }
-        
+
         /// <summary>
         /// Creates new websocket protocol message of a binary  value
         /// </summary>
         public static byte[] CreateFromBinary(byte[] data)
         {
-            using MemoryStream ms = new MemoryStream();
-            //fin and op code
-            ms.WriteByte(0x82);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                //fin and op code
+                ms.WriteByte(0x82);
 
-            //length
-            WriteLength(ms, data.Length);
+                //length
+                WriteLength(ms, data.Length);
 
-            ms.Write(data, 0, data.Length);
-            return ms.ToArray();
+                ms.Write(data, 0, data.Length);
+                return ms.ToArray();
+            }
         }
+
         /// <summary>
         /// Creates new websocket protocol message of a binary  value
         /// </summary>
         public static async Task<byte[]> CreateFromBinaryAsync(byte[] data)
         {
-            await using MemoryStream ms = new MemoryStream();
-            //fin and op code
-            ms.WriteByte(0x82);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                //fin and op code
+                ms.WriteByte(0x82);
 
-            //length
-            await WriteLengthAsync(ms, data.Length);
+                //length
+                await WriteLengthAsync(ms, data.Length);
 
-            await ms.WriteAsync(data, 0, data.Length);
-            return ms.ToArray();
+                await ms.WriteAsync(data, 0, data.Length);
+                return ms.ToArray();
+            }
         }
-        
+
         /// <summary>
         /// Creates new ping message
         /// </summary>
@@ -121,7 +129,7 @@ namespace Twino.Core
                 stream.Write(new[] {lb[7], lb[6], lb[5], lb[4], lb[3], lb[2], lb[1], lb[0]}, 0, 8);
             }
         }
-        
+
         /// <summary>
         /// Writes length of the message with websocket protocol
         /// </summary>

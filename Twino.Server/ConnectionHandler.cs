@@ -78,7 +78,7 @@ namespace Twino.Server
                             if (_server.Logger != null)
                                 _server.Logger.LogException("Unhandled Exception", ex);
                         }
-                    }, tcp, false);
+                    }, tcp);
                 }
                 catch
                 {
@@ -278,13 +278,13 @@ namespace Twino.Server
         /// </summary>
         private static SslProtocols GetProtocol(HostListener server)
         {
-            return server.Options.SslProtocol switch
+            switch (server.Options.SslProtocol)
             {
-                "tls" => SslProtocols.Tls,
-                "tls11" => SslProtocols.Tls11,
-                "tls12" => SslProtocols.Tls12,
-                _ => SslProtocols.None
-            };
+                case "tls": return SslProtocols.Tls;
+                case "tls11": return SslProtocols.Tls11;
+                case "tls12": return SslProtocols.Tls12;
+                default: return SslProtocols.None;
+            }
         }
     }
 }

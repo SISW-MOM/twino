@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
     <PackageVersion>1.5.2</PackageVersion>
     <AssemblyVersion>1.5.2</AssemblyVersion>
     <FileVersion>1.5.2</FileVersion>
@@ -12,6 +12,7 @@
     <PackageLicenseUrl>https://github.com/mhelvacikoylu/twino/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/mhelvacikoylu/twino.git</RepositoryUrl>
     <PackageTags>twino, ioc, dependency, injection, service, container, scope</PackageTags>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
 </Project>

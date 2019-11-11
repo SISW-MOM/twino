@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using Twino.Core.Http;
 using Twino.Server.Http;
@@ -45,28 +43,30 @@ namespace Twino.Server.WebSockets
         /// </summary>
         internal async Task HandshakeClient()
         {
-            await using MemoryStream ms = new MemoryStream();
-            await ms.WriteAsync(PredefinedHeaders.WEBSOCKET_101_SWITCHING_PROTOCOLS_CRLF);
-            await ms.WriteAsync(PredefinedHeaders.SERVER_CRLF);
-            await ms.WriteAsync(PredefinedHeaders.CONNECTION_UPGRADE_CRLF);
-            await ms.WriteAsync(PredefinedHeaders.UPGRADE_WEBSOCKET_CRLF);
-            await ms.WriteAsync(PredefinedHeaders.SEC_WEB_SOCKET_COLON);
-
-            ReadOnlyMemory<byte> memory = Encoding.UTF8.GetBytes(CreateWebSocketGuid(Request.WebSocketKey) + "\r\n\r\n");
-            await ms.WriteAsync(memory);
-
-            ms.WriteTo(Request.Response.NetworkStream);
-
-            ServerSocket client = await Server.ClientFactory.Create(Server, Request, Info.Client);
-            if (client == null)
+            using (MemoryStream ms = new MemoryStream())
             {
-                Info.Close();
-                return;
+                await ms.WriteAsync(PredefinedHeaders.WEBSOCKET_101_SWITCHING_PROTOCOLS_CRLF);
+                await ms.WriteAsync(PredefinedHeaders.SERVER_CRLF);
+                await ms.WriteAsync(PredefinedHeaders.CONNECTION_UPGRADE_CRLF);
+                await ms.WriteAsync(PredefinedHeaders.UPGRADE_WEBSOCKET_CRLF);
+                await ms.WriteAsync(PredefinedHeaders.SEC_WEB_SOCKET_COLON);
+
+                ReadOnlyMemory<byte> memory = Encoding.UTF8.GetBytes(CreateWebSocketGuid(Request.WebSocketKey) + "\r\n\r\n");
+                await ms.WriteAsync(memory);
+
+                ms.WriteTo(Request.Response.NetworkStream);
+
+                ServerSocket client = await Server.ClientFactory.Create(Server, Request, Info.Client);
+                if (client == null)
+                {
+                    Info.Close();
+                    return;
+                }
+
+                Server.SetClientConnected(client);
+                client.Start();
+                Server.Pinger.AddClient(client);
             }
-            
-            Server.SetClientConnected(client);
-            client.Start();
-            Server.Pinger.AddClient(client);
         }
 
         /// <summary>

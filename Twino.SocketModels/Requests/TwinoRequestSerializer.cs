@@ -35,7 +35,7 @@ namespace Twino.SocketModels.Requests
                 return null;
 
             string serialized = message.Substring(headerStart, headerEnd - headerStart + 1);
-            T header = System.Text.Json.JsonSerializer.Deserialize<T>(serialized);
+            T header = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(serialized);
             return header;
         }
 
@@ -71,7 +71,7 @@ namespace Twino.SocketModels.Requests
                 model = criticalModel;
             }
             else
-                model = System.Text.Json.JsonSerializer.Deserialize(serialized, type);
+                model = Newtonsoft.Json.JsonConvert.DeserializeObject(serialized, type);
 
             return model;
         }
@@ -101,7 +101,7 @@ namespace Twino.SocketModels.Requests
                 writer.EndObject();
             }
             else
-                await writer.Writer.WriteRawAsync(System.Text.Json.JsonSerializer.Serialize(model, model.GetType()));
+                await writer.Writer.WriteRawAsync(Newtonsoft.Json.JsonConvert.SerializeObject(model));
 
             await writer.Writer.WriteEndArrayAsync();
 
@@ -138,7 +138,7 @@ namespace Twino.SocketModels.Requests
                 if (model == null)
                     await writer.Writer.WriteRawAsync("null");
                 else
-                    await writer.Writer.WriteRawAsync(System.Text.Json.JsonSerializer.Serialize(model, model.GetType()));
+                    await writer.Writer.WriteRawAsync(Newtonsoft.Json.JsonConvert.SerializeObject(model));
             }
 
             await writer.Writer.WriteEndArrayAsync();

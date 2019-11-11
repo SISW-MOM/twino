@@ -55,7 +55,8 @@ namespace Twino.Mvc.Results
         public async Task SetAsync(object model)
         {
             Stream = new MemoryStream();
-            await System.Text.Json.JsonSerializer.SerializeAsync(Stream, model, model.GetType());
+            string serialized = Newtonsoft.Json.JsonConvert.SerializeObject(model);
+            await Stream.WriteAsync(Encoding.UTF8.GetBytes(serialized));
         }
 
         /// <summary>
@@ -63,7 +64,7 @@ namespace Twino.Mvc.Results
         /// </summary>
         public void Set(object model)
         {
-            string serialized = System.Text.Json.JsonSerializer.Serialize(model, model.GetType());
+            string serialized = Newtonsoft.Json.JsonConvert.SerializeObject(model);
             Stream = new MemoryStream(Encoding.UTF8.GetBytes(serialized));
         }
     }
