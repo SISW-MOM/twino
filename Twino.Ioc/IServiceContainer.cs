@@ -100,6 +100,20 @@ namespace Twino.Ioc
         /// </summary>
         void AddSingleton(Type serviceType, object instance);
 
+        /// <summary>
+        /// Adds a singleton service to the container.
+        /// Service will be created with first call.
+        /// </summary>
+        void AddSingleton<TService, TImplementation>(Action<TImplementation> afterCreated)
+                where TService : class
+                where TImplementation : class, TService;
+
+        /// <summary>
+        /// Adds a singleton service to the container.
+        /// Service will be created with first call.
+        /// </summary>
+        void AddSingleton(Type serviceType, Type implementationType, Delegate afterCreated)
+
         #endregion
 
         #region Add Pool
