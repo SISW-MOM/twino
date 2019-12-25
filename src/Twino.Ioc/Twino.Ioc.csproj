@@ -6,9 +6,9 @@
         <Product>Twino.Ioc</Product>
         <Description>Twino IOC Service containers and scopes</Description>
         <PackageTags>twino,ioc,dependency,injection,service,container,scope</PackageTags>
-        <AssemblyVersion>2.1.3</AssemblyVersion>
-        <FileVersion>2.1.3</FileVersion>
-        <PackageVersion>2.1.3</PackageVersion>
+        <AssemblyVersion>2.1.5</AssemblyVersion>
+        <FileVersion>2.1.5</FileVersion>
+        <PackageVersion>2.1.5</PackageVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Mehmet Helvacıköylü</Authors>
         <PackageProjectUrl>https://github.com/mhelvacikoylu/twino</PackageProjectUrl>
