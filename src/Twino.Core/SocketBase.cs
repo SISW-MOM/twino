@@ -200,7 +200,7 @@ namespace Twino.Core
         private void SendQueue(byte[] data)
         {
             DateTime until = DateTime.UtcNow.AddSeconds(5);
-            ThreadPool.UnsafeQueueUserWorkItem(async (s) =>
+            ThreadPool.QueueUserWorkItem(async (s) =>
             {
                 while (!_writeCompleted)
                 {
@@ -210,7 +210,7 @@ namespace Twino.Core
                 }
 
                 Send(data);
-            }, "", false);
+            }, "");
         }
 
         #endregion
