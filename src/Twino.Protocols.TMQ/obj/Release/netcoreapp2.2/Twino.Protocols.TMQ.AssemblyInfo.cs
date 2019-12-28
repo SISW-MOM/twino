@@ -11,8 +11,8 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Twino Messaging Queue (TMQ) Protocol library and server extension for Twino Serve" +
 "r")]
-[assembly: System.Reflection.AssemblyFileVersionAttribute("2.1.9")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("2.1.11")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
 [assembly: System.Reflection.AssemblyProductAttribute("Twino.Protocols.TMQ")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Twino.Protocols.TMQ")]
-[assembly: System.Reflection.AssemblyVersionAttribute("2.1.9")]
+[assembly: System.Reflection.AssemblyVersionAttribute("2.1.11")]
