@@ -360,6 +360,9 @@ namespace Twino.Client.TMQ
                     Disconnect();
                     break;
 
+                case MessageType.Pong:
+                    break;
+
                 case MessageType.Ping:
                     Pong();
                     break;
@@ -428,6 +431,45 @@ namespace Twino.Client.TMQ
         }
 
         /// <summary>
+        /// Sends a json object message
+        /// </summary>
+        public bool SendJson(string target, ushort contentType, object model)
+        {
+            TmqMessage msg = new TmqMessage();
+            msg.Target = target;
+            msg.ContentType = contentType;
+            msg.SetJsonContent(model).Wait();
+
+            return Send(msg);
+        }
+
+        /// <summary>
+        /// Sends a string message
+        /// </summary>
+        public bool Send(string target, ushort contentType, string message)
+        {
+            TmqMessage msg = new TmqMessage();
+            msg.Target = target;
+            msg.ContentType = contentType;
+            msg.SetStringContent(message);
+
+            return Send(msg);
+        }
+
+        /// <summary>
+        /// Sends a memory stream message
+        /// </summary>
+        public bool Send(string target, ushort contentType, MemoryStream content)
+        {
+            TmqMessage message = new TmqMessage();
+            message.Target = target;
+            message.ContentType = contentType;
+            message.Content = content;
+
+            return Send(message);
+        }
+
+        /// <summary>
         /// Sends a TMQ message
         /// </summary>
         public async Task<bool> SendAsync(TmqMessage message)
@@ -442,38 +484,6 @@ namespace Twino.Client.TMQ
             byte[] data = await _writer.Create(message);
             return await SendAsync(data);
         }
-
-        /// <summary>
-        /// Sends the message and waits for response
-        /// </summary>
-        public async Task<TmqMessage> Request(TmqMessage message)
-        {
-            message.ResponseRequired = true;
-            message.AcknowledgeRequired = false;
-            message.MessageId = UniqueIdGenerator.Create();
-
-            bool sent = await SendAsync(message);
-            if (!sent)
-                return null;
-
-            return await _follower.FollowResponse(message);
-        }
-
-        /// <summary>
-        /// Sends acknowledge message for the message
-        /// </summary>
-        public async Task<bool> Acknowledge(TmqMessage message)
-        {
-            if (!message.AcknowledgeRequired)
-                return false;
-
-            TmqMessage ack = message.CreateAcknowledge();
-            return await SendAsync(ack);
-        }
-
-        #endregion
-
-        #region MQ Operations
 
         /// <summary>
         /// Sends a TMQ message and waits for acknowledge
@@ -494,178 +504,67 @@ namespace Twino.Client.TMQ
         }
 
         /// <summary>
-        /// Joins to a channel
+        /// Sends a json object message
         /// </summary>
-        public async Task<bool> Join(string channel, bool verifyResponse)
+        public async Task<bool> SendJsonAsync(string target, ushort contentType, object model, bool waitAcknowledge)
         {
-            TmqMessage message = new TmqMessage();
-            message.Type = MessageType.Server;
-            message.ContentType = KnownContentTypes.Join;
-            message.Target = channel;
-            message.ResponseRequired = verifyResponse;
-
-            if (verifyResponse)
-                message.MessageId = UniqueIdGenerator.Create();
-
-            return await WaitResponseOk(message, verifyResponse);
-        }
-
-        /// <summary>
-        /// Leaves from a channel
-        /// </summary>
-        public async Task<bool> Leave(string channel, bool verifyResponse)
-        {
-            TmqMessage message = new TmqMessage();
-            message.Type = MessageType.Server;
-            message.ContentType = KnownContentTypes.Leave;
-            message.Target = channel;
-            message.ResponseRequired = verifyResponse;
-
-            if (verifyResponse)
-                message.MessageId = UniqueIdGenerator.Create();
-
-            return await WaitResponseOk(message, verifyResponse);
-        }
-
-        /// <summary>
-        /// Pushes a message to a queue
-        /// </summary>
-        public async Task<bool> PushJson(string channel, ushort contentType, object jsonObject, bool waitAcknowledge)
-        {
-            TmqMessage message = new TmqMessage();
-            message.Type = MessageType.Channel;
-            message.ContentType = contentType;
-            message.Target = channel;
-            message.AcknowledgeRequired = waitAcknowledge;
-            message.Content = new MemoryStream(Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(jsonObject)));
+            TmqMessage msg = new TmqMessage();
+            msg.Target = target;
+            msg.ContentType = contentType;
+            await msg.SetJsonContent(model);
 
             if (waitAcknowledge)
-                message.MessageId = UniqueIdGenerator.Create();
+                return await SendWithAcknowledge(msg);
 
-            return await WaitForAcknowledge(message, waitAcknowledge);
+            return await SendAsync(msg);
         }
 
         /// <summary>
-        /// Pushes a message to a queue
+        /// Sends a string message
         /// </summary>
-        public async Task<bool> Push(string channel, ushort contentType, string content, bool waitAcknowledge)
+        public async Task<bool> SendAsync(string target, ushort contentType, string message, bool waitAcknowledge)
         {
-            return await Push(channel, contentType, new MemoryStream(Encoding.UTF8.GetBytes(content)), waitAcknowledge);
+            TmqMessage msg = new TmqMessage();
+            msg.Target = target;
+            msg.ContentType = contentType;
+            msg.SetStringContent(message);
+
+            if (waitAcknowledge)
+                return await SendWithAcknowledge(msg);
+
+            return await SendAsync(msg);
         }
 
         /// <summary>
-        /// Pushes a message to a queue
+        /// Sends a memory stream message
         /// </summary>
-        public async Task<bool> Push(string channel, ushort contentType, MemoryStream content, bool waitAcknowledge)
+        public async Task<bool> SendAsync(string target, ushort contentType, MemoryStream content, bool waitAcknowledge)
         {
             TmqMessage message = new TmqMessage();
-            message.Type = MessageType.Channel;
+            message.Target = target;
             message.ContentType = contentType;
-            message.Target = channel;
             message.Content = content;
-            message.AcknowledgeRequired = waitAcknowledge;
 
             if (waitAcknowledge)
-                message.MessageId = UniqueIdGenerator.Create();
+                return await SendWithAcknowledge(message);
 
-            return await WaitForAcknowledge(message, waitAcknowledge);
+            return await SendAsync(message);
         }
 
-        /// <summary>
-        /// Creates a new channel without any queue
-        /// </summary>
-        public async Task<bool> CreateOnlyChannel(string channel, bool verifyResponse)
-        {
-            TmqMessage message = new TmqMessage();
-            message.Type = MessageType.Server;
-            message.ContentType = KnownContentTypes.CreateChannel;
-            message.Target = channel;
-            message.ResponseRequired = verifyResponse;
+        #endregion
 
-            if (verifyResponse)
-                message.MessageId = UniqueIdGenerator.Create();
-
-            return await WaitResponseOk(message, verifyResponse);
-        }
+        #region Acknowledge - Response
 
         /// <summary>
-        /// Removes a channel and all queues in it
+        /// Sends acknowledge message for the message
         /// </summary>
-        public async Task<bool> RemoveChannel(string channel, bool verifyResponse)
+        public async Task<bool> Acknowledge(TmqMessage message)
         {
-            TmqMessage message = new TmqMessage();
-            message.Type = MessageType.Server;
-            message.ContentType = KnownContentTypes.RemoveChannel;
-            message.Target = channel;
-            message.ResponseRequired = verifyResponse;
+            if (!message.AcknowledgeRequired)
+                return false;
 
-            if (verifyResponse)
-                message.MessageId = UniqueIdGenerator.Create();
-
-            return await WaitResponseOk(message, verifyResponse);
-        }
-
-        /// <summary>
-        /// Creates new queue in server
-        /// </summary>
-        public async Task<bool> CreateQueue(string channel, ushort contentType, bool verifyResponse, Action<QueueOptions> optionsAction = null)
-        {
-            TmqMessage message = new TmqMessage();
-            message.Type = MessageType.Server;
-            message.ContentType = KnownContentTypes.CreateQueue;
-            message.Target = channel;
-            message.ResponseRequired = verifyResponse;
-
-            if (optionsAction == null)
-                message.Content = new MemoryStream(BitConverter.GetBytes(contentType));
-            else
-            {
-                QueueOptions options = new QueueOptions();
-                optionsAction(options);
-                message.Content = new MemoryStream(Encoding.UTF8.GetBytes(options.Serialize(contentType)));
-            }
-
-            if (verifyResponse)
-                message.MessageId = UniqueIdGenerator.Create();
-
-            return await WaitResponseOk(message, verifyResponse);
-        }
-
-        /// <summary>
-        /// Removes a queue in a channel in server
-        /// </summary>
-        public async Task<bool> RemoveQueue(string channel, ushort contentType, bool verifyResponse)
-        {
-            TmqMessage message = new TmqMessage();
-            message.Type = MessageType.Server;
-            message.ContentType = KnownContentTypes.RemoveQueue;
-            message.Target = channel;
-            message.ResponseRequired = verifyResponse;
-            message.Content = new MemoryStream(BitConverter.GetBytes(contentType));
-
-            if (verifyResponse)
-                message.MessageId = UniqueIdGenerator.Create();
-
-            return await WaitResponseOk(message, verifyResponse);
-        }
-
-        /// <summary>
-        /// Updates queue options
-        /// </summary>
-        public async Task<bool> SetQueueOptions(string channel, ushort contentType, Action<QueueOptions> optionsAction)
-        {
-            TmqMessage message = new TmqMessage();
-            message.Type = MessageType.Server;
-            message.ContentType = KnownContentTypes.UpdateQueue;
-            message.Target = channel;
-            message.ResponseRequired = true;
-            message.MessageId = UniqueIdGenerator.Create();
-
-            QueueOptions options = new QueueOptions();
-            optionsAction(options);
-            message.Content = new MemoryStream(Encoding.UTF8.GetBytes(options.Serialize(contentType)));
-
-            return await WaitResponseOk(message, true);
+            TmqMessage ack = message.CreateAcknowledge();
+            return await SendAsync(ack);
         }
 
         /// <summary>
@@ -710,19 +609,290 @@ namespace Twino.Client.TMQ
             return await task;
         }
 
+        #endregion
+
+        #region Request
+
+        /// <summary>
+        /// Sends a request to target with a JSON model, waits response
+        /// </summary>
+        public async Task<TmqMessage> RequestJson(string target, ushort contentType, object model)
+        {
+            TmqMessage message = new TmqMessage(MessageType.Client);
+            message.Target = target;
+            message.ContentType = contentType;
+            await message.SetJsonContent(model);
+
+            return await Request(message);
+        }
+
+        /// <summary>
+        /// Sends a request to target, waits response
+        /// </summary>
+        public async Task<TmqMessage> Request(string target, ushort contentType, MemoryStream content)
+        {
+            TmqMessage message = new TmqMessage(MessageType.Client);
+            message.Target = target;
+            message.Content = content;
+            message.ContentType = contentType;
+
+            return await Request(message);
+        }
+
+        /// <summary>
+        /// Sends a request to target, waits response
+        /// </summary>
+        public async Task<TmqMessage> Request(string target, ushort contentType, string content)
+        {
+            TmqMessage message = new TmqMessage(MessageType.Client);
+            message.Target = target;
+            message.ContentType = contentType;
+            message.SetStringContent(content);
+
+            return await Request(message);
+        }
+
+        /// <summary>
+        /// Sends the message and waits for response
+        /// </summary>
+        public async Task<TmqMessage> Request(TmqMessage message)
+        {
+            message.ResponseRequired = true;
+            message.AcknowledgeRequired = false;
+            message.MessageId = UniqueIdGenerator.Create();
+
+            bool sent = await SendAsync(message);
+            if (!sent)
+                return null;
+
+            return await _follower.FollowResponse(message);
+        }
+
+        #endregion
+
+        #region Push
+
+        /// <summary>
+        /// Pushes a message to a queue
+        /// </summary>
+        public async Task<bool> PushJson(string channel, ushort queueId, object jsonObject, bool waitAcknowledge)
+        {
+            TmqMessage message = new TmqMessage();
+            message.Type = MessageType.Channel;
+            message.ContentType = queueId;
+            message.Target = channel;
+            message.AcknowledgeRequired = waitAcknowledge;
+            message.Content = new MemoryStream(Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(jsonObject)));
+
+            if (waitAcknowledge)
+                message.MessageId = UniqueIdGenerator.Create();
+
+            return await WaitForAcknowledge(message, waitAcknowledge);
+        }
+
+        /// <summary>
+        /// Pushes a message to a queue
+        /// </summary>
+        public async Task<bool> Push(string channel, ushort queueId, string content, bool waitAcknowledge)
+        {
+            return await Push(channel, queueId, new MemoryStream(Encoding.UTF8.GetBytes(content)), waitAcknowledge);
+        }
+
+        /// <summary>
+        /// Pushes a message to a queue
+        /// </summary>
+        public async Task<bool> Push(string channel, ushort queueId, MemoryStream content, bool waitAcknowledge)
+        {
+            TmqMessage message = new TmqMessage();
+            message.Type = MessageType.Channel;
+            message.ContentType = queueId;
+            message.Target = channel;
+            message.Content = content;
+            message.AcknowledgeRequired = waitAcknowledge;
+
+            if (waitAcknowledge)
+                message.MessageId = UniqueIdGenerator.Create();
+
+            return await WaitForAcknowledge(message, waitAcknowledge);
+        }
+
+        #endregion
+
+        #region Pull
+
         /// <summary>
         /// Request a message from Pull queue
         /// </summary>
-        public async Task<bool> Pull(string channel, ushort contentType)
+        public async Task<TmqMessage> Pull(string channel, ushort queueId)
         {
             TmqMessage message = new TmqMessage();
             message.Type = MessageType.Channel;
             message.ResponseRequired = true;
-            message.ContentType = contentType;
+            message.ContentType = queueId;
             message.Target = channel;
+            message.MessageId = UniqueIdGenerator.Create();
 
+            Task<TmqMessage> task = _follower.FollowResponse(message);
             bool sent = await SendAsync(message);
-            return sent;
+            if (!sent)
+                return null;
+
+            TmqMessage response = await task;
+            if (response.Content == null || response.Length == 0 || response.Content.Length == 0)
+                return null;
+
+            return response;
+        }
+
+        /// <summary>
+        /// Request a message from Pull queue
+        /// </summary>
+        public async Task<TModel> PullJson<TModel>(string channel, ushort queueId)
+        {
+            TmqMessage response = await Pull(channel, queueId);
+            if (response?.Content == null || response.Length == 0 || response.Content.Length == 0)
+                return default;
+
+            return await System.Text.Json.JsonSerializer.DeserializeAsync<TModel>(response.Content);
+        }
+
+        #endregion
+
+        #region Channel
+
+        /// <summary>
+        /// Joins to a channel
+        /// </summary>
+        public async Task<bool> Join(string channel, bool verifyResponse)
+        {
+            TmqMessage message = new TmqMessage();
+            message.Type = MessageType.Server;
+            message.ContentType = KnownContentTypes.Join;
+            message.Target = channel;
+            message.ResponseRequired = verifyResponse;
+
+            if (verifyResponse)
+                message.MessageId = UniqueIdGenerator.Create();
+
+            return await WaitResponseOk(message, verifyResponse);
+        }
+
+        /// <summary>
+        /// Leaves from a channel
+        /// </summary>
+        public async Task<bool> Leave(string channel, bool verifyResponse)
+        {
+            TmqMessage message = new TmqMessage();
+            message.Type = MessageType.Server;
+            message.ContentType = KnownContentTypes.Leave;
+            message.Target = channel;
+            message.ResponseRequired = verifyResponse;
+
+            if (verifyResponse)
+                message.MessageId = UniqueIdGenerator.Create();
+
+            return await WaitResponseOk(message, verifyResponse);
+        }
+
+        /// <summary>
+        /// Creates a new channel without any queue
+        /// </summary>
+        public async Task<bool> CreateOnlyChannel(string channel, bool verifyResponse)
+        {
+            TmqMessage message = new TmqMessage();
+            message.Type = MessageType.Server;
+            message.ContentType = KnownContentTypes.CreateChannel;
+            message.Target = channel;
+            message.ResponseRequired = verifyResponse;
+
+            if (verifyResponse)
+                message.MessageId = UniqueIdGenerator.Create();
+
+            return await WaitResponseOk(message, verifyResponse);
+        }
+
+        /// <summary>
+        /// Removes a channel and all queues in it
+        /// </summary>
+        public async Task<bool> RemoveChannel(string channel, bool verifyResponse)
+        {
+            TmqMessage message = new TmqMessage();
+            message.Type = MessageType.Server;
+            message.ContentType = KnownContentTypes.RemoveChannel;
+            message.Target = channel;
+            message.ResponseRequired = verifyResponse;
+
+            if (verifyResponse)
+                message.MessageId = UniqueIdGenerator.Create();
+
+            return await WaitResponseOk(message, verifyResponse);
+        }
+
+        #endregion
+
+        #region Queue
+
+        /// <summary>
+        /// Creates new queue in server
+        /// </summary>
+        public async Task<bool> CreateQueue(string channel, ushort queueId, bool verifyResponse, Action<QueueOptions> optionsAction = null)
+        {
+            TmqMessage message = new TmqMessage();
+            message.Type = MessageType.Server;
+            message.ContentType = KnownContentTypes.CreateQueue;
+            message.Target = channel;
+            message.ResponseRequired = verifyResponse;
+
+            if (optionsAction == null)
+                message.Content = new MemoryStream(BitConverter.GetBytes(queueId));
+            else
+            {
+                QueueOptions options = new QueueOptions();
+                optionsAction(options);
+                message.Content = new MemoryStream(Encoding.UTF8.GetBytes(options.Serialize(queueId)));
+            }
+
+            if (verifyResponse)
+                message.MessageId = UniqueIdGenerator.Create();
+
+            return await WaitResponseOk(message, verifyResponse);
+        }
+
+        /// <summary>
+        /// Removes a queue in a channel in server
+        /// </summary>
+        public async Task<bool> RemoveQueue(string channel, ushort queueId, bool verifyResponse)
+        {
+            TmqMessage message = new TmqMessage();
+            message.Type = MessageType.Server;
+            message.ContentType = KnownContentTypes.RemoveQueue;
+            message.Target = channel;
+            message.ResponseRequired = verifyResponse;
+            message.Content = new MemoryStream(BitConverter.GetBytes(queueId));
+
+            if (verifyResponse)
+                message.MessageId = UniqueIdGenerator.Create();
+
+            return await WaitResponseOk(message, verifyResponse);
+        }
+
+        /// <summary>
+        /// Updates queue options
+        /// </summary>
+        public async Task<bool> SetQueueOptions(string channel, ushort queueId, Action<QueueOptions> optionsAction)
+        {
+            TmqMessage message = new TmqMessage();
+            message.Type = MessageType.Server;
+            message.ContentType = KnownContentTypes.UpdateQueue;
+            message.Target = channel;
+            message.ResponseRequired = true;
+            message.MessageId = UniqueIdGenerator.Create();
+
+            QueueOptions options = new QueueOptions();
+            optionsAction(options);
+            message.Content = new MemoryStream(Encoding.UTF8.GetBytes(options.Serialize(queueId)));
+
+            return await WaitResponseOk(message, true);
         }
 
         #endregion

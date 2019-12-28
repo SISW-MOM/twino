@@ -50,7 +50,7 @@ namespace Twino.Server
                     {
                         try
                         {
-                            await AcceptClient(tcp);
+                            await AcceptClient(t);
                         }
                         catch (Exception ex)
                         {
@@ -116,8 +116,8 @@ namespace Twino.Server
                     //matched
                     if (hsresult.Accepted)
                     {
-                        info.Protocol = protocol;
                         hsresult.PreviouslyRead = pbytes;
+                        info.Protocol = protocol;
                         info.Socket = hsresult.Socket;
                         
                         if (info.Socket != null)
