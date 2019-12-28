@@ -20,4 +20,8 @@
         <ProjectReference Include="..\Twino.Ioc\Twino.Ioc.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="obj\Release\netcoreapp2.2" />
+    </ItemGroup>
+
 </Project>

@@ -22,4 +22,8 @@
         <ProjectReference Include="..\Twino.Server\Twino.Server.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="obj\Release\netcoreapp2.2" />
+    </ItemGroup>
+
 </Project>
