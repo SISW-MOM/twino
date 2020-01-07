@@ -94,6 +94,9 @@ namespace Twino.Protocols.TMQ
 
             await ms.WriteAsync(BitConverter.GetBytes(message.ContentType));
 
+            if (message.Content != null && message.Length == 0)
+                message.Length = (ulong) message.Content.Length;
+
             if (message.Length < 253)
                 ms.WriteByte((byte) message.Length);
             else if (message.Length <= ushort.MaxValue)
