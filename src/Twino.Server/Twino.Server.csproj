@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp2.2</TargetFramework>
+        <TargetFramework>netcoreapp3.0</TargetFramework>
         <Title>Twino.Server</Title>
         <Product>Twino.Server</Product>
         <Description>Twino TCP Socket Server</Description>
         <PackageTags>twino,tcp,socket,server,http,websocket,tmq,mq</PackageTags>
-        <AssemblyVersion>2.2.5</AssemblyVersion>
-        <FileVersion>2.2.5</FileVersion>
-        <PackageVersion>2.2.5</PackageVersion>
+        <AssemblyVersion>2.2.6</AssemblyVersion>
+        <FileVersion>2.2.6</FileVersion>
+        <PackageVersion>2.2.6</PackageVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Mehmet Helvacıköylü</Authors>
         <PackageProjectUrl>https://github.com/mhelvacikoylu/twino</PackageProjectUrl>
@@ -16,12 +16,16 @@
         <RepositoryUrl>https://github.com/mhelvacikoylu/twino</RepositoryUrl>
     </PropertyGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\Twino.Core\Twino.Core.csproj" />
-    </ItemGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DocumentationFile>bin\Debug\Twino.Server.xml</DocumentationFile>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DocumentationFile>bin\Release\Twino.Server.xml</DocumentationFile>
+    </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="obj\Release\netcoreapp2.2" />
+        <ProjectReference Include="..\Twino.Core\Twino.Core.csproj" />
     </ItemGroup>
 
 </Project>
