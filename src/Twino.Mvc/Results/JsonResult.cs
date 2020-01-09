@@ -33,6 +33,9 @@ namespace Twino.Mvc.Results
         /// </summary>
         public Dictionary<string, string> Headers { get; }
 
+        /// <summary>
+        /// Creates new empty JSON result
+        /// </summary>
         public JsonResult(HttpStatusCode code = HttpStatusCode.OK)
         {
             Code = code;
@@ -40,6 +43,9 @@ namespace Twino.Mvc.Results
             Headers = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
         }
 
+        /// <summary>
+        /// Creates new JSON result
+        /// </summary>
         public JsonResult(object model, HttpStatusCode code = HttpStatusCode.OK)
         {
             Code = code;
