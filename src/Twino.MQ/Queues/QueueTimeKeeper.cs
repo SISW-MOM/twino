@@ -52,13 +52,13 @@ namespace Twino.MQ.Queues
         public void Run()
         {
             TimeSpan interval = TimeSpan.FromMilliseconds(1000);
-            _timer = new Timer(s =>
+            _timer = new Timer(async s =>
             {
                 if ((_queue.Options.Status == QueueStatus.Push || _queue.Options.Status == QueueStatus.Pull)
                     && _queue.Options.MessageTimeout > TimeSpan.Zero)
-                    ProcessReceiveTimeup();
+                    await ProcessReceiveTimeup();
 
-                ProcessDeliveries();
+                await ProcessDeliveries();
             }, null, interval, interval);
         }
 
@@ -88,7 +88,7 @@ namespace Twino.MQ.Queues
         /// Checks messages if they are not received from any receiver and time is up
         /// Complete the operation about timing up.
         /// </summary>
-        private void ProcessReceiveTimeup()
+        private async Task ProcessReceiveTimeup()
         {
             _timeupMessages.Clear();
             lock (_queue.HighPriorityLinkedList)
@@ -97,7 +97,8 @@ namespace Twino.MQ.Queues
             foreach (QueueMessage message in _timeupMessages)
             {
                 _queue.Info.AddMessageTimeout();
-                _ = _queue.DeliveryHandler.MessageTimedOut(_queue, message);
+                Decision decision = await _queue.DeliveryHandler.MessageTimedOut(_queue, message);
+                await _queue.ApplyDecision(decision, message);
             }
 
             _timeupMessages.Clear();
@@ -107,7 +108,8 @@ namespace Twino.MQ.Queues
             foreach (QueueMessage message in _timeupMessages)
             {
                 _queue.Info.AddMessageTimeout();
-                _ = _queue.DeliveryHandler.MessageTimedOut(_queue, message);
+                Decision decision = await _queue.DeliveryHandler.MessageTimedOut(_queue, message);
+                await _queue.ApplyDecision(decision, message);
             }
         }
 
@@ -132,7 +134,7 @@ namespace Twino.MQ.Queues
         /// <summary>
         /// Checks all pending deliveries if they are delivered or time is up
         /// </summary>
-        private void ProcessDeliveries()
+        private async Task ProcessDeliveries()
         {
             var rdlist = new List<Tuple<bool, MessageDelivery>>(16);
 
@@ -159,11 +161,15 @@ namespace Twino.MQ.Queues
                 {
                     delivery.MarkAsAcknowledgeTimedUp();
                     _queue.Info.AddAcknowledgeTimeout();
-                    _ = _queue.DeliveryHandler.AcknowledgeTimedOut(_queue, delivery);
+                    Decision decision = await _queue.DeliveryHandler.AcknowledgeTimedOut(_queue, delivery);
+
+                    if (delivery.Message != null)
+                        await _queue.ApplyDecision(decision, delivery.Message);
+
                     if (!released)
                     {
                         released = true;
-                        _queue.ReleaseAcknowledgeLock();
+                        _queue.ReleaseAcknowledgeLock(false);
                     }
                 }
             }
