@@ -493,7 +493,14 @@ namespace Twino.MQ.Queues
                 Info.AddError();
                 try
                 {
-                    _ = DeliveryHandler.ExceptionThrown(this, held, ex);
+                    Decision decision = await DeliveryHandler.ExceptionThrown(this, held, ex);
+                    if (held != null)
+                    {
+                        await ApplyDecision(decision, held);
+
+                        if (decision.KeepMessage && !held.IsInQueue)
+                            PutMessageBack(held);
+                    }
                 }
                 catch //if developer does wrong operation, we should not stop
                 {
@@ -629,14 +636,14 @@ namespace Twino.MQ.Queues
                 MessageDelivery delivery = new MessageDelivery(message, client, deadline);
                 delivery.FirstAcquirer = message.Message.FirstAcquirer;
 
-                //adds the delivery to time keeper to check timing up
-                _timeKeeper.AddAcknowledgeCheck(delivery);
-
                 //send the message
                 bool sent = client.Client.Send(messageData);
 
                 if (sent)
                 {
+                    //adds the delivery to time keeper to check timing up
+                    _timeKeeper.AddAcknowledgeCheck(delivery);
+
                     //set as sent, if message is sent to it's first acquirer,
                     //set message first acquirer false and re-create byte array data of the message
                     bool firstAcquirer = message.Message.FirstAcquirer;
@@ -793,8 +800,6 @@ namespace Twino.MQ.Queues
             MessageDelivery delivery = new MessageDelivery(message, requester, deadline);
             delivery.FirstAcquirer = message.Message.FirstAcquirer;
 
-            _timeKeeper.AddAcknowledgeCheck(delivery);
-
             //change to response message, send, change back to channel message
             string mid = message.Message.MessageId;
             message.Message.SetMessageId(request.MessageId);
@@ -806,6 +811,7 @@ namespace Twino.MQ.Queues
 
             if (sent)
             {
+                _timeKeeper.AddAcknowledgeCheck(delivery);
                 delivery.MarkAsSent();
 
                 //do after send operations for per message
@@ -946,7 +952,7 @@ namespace Twino.MQ.Queues
             {
                 if (Options.HideClientNames)
                     deliveryMessage.SetSource(null);
-                
+
                 await ApplyDecision(decision, delivery.Message, deliveryMessage);
             }
 
