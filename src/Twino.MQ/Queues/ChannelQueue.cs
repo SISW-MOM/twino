@@ -657,6 +657,7 @@ namespace Twino.MQ.Queues
 
                     message = list.First.Value;
                     list.RemoveFirst();
+                    message.IsInQueue = false;
                 }
 
                 try
@@ -668,7 +669,8 @@ namespace Twino.MQ.Queues
                     Info.AddError();
                     try
                     {
-                        _ = DeliveryHandler.ExceptionThrown(this, message, ex);
+                        Decision decision = await DeliveryHandler.ExceptionThrown(this, message, ex);
+                        await ApplyDecision(decision, message);
                     }
                     catch //if developer does wrong operation, we should not stop
                     {
