@@ -77,6 +77,11 @@ namespace Twino.Core
         /// Used for preventing unnecessary ping/pong traffic
         /// </summary>
         public DateTime LastAliveDate { get; protected set; } = DateTime.UtcNow;
+        
+        /// <summary>
+        /// True, If a pong must received asap
+        /// </summary>
+        internal bool PongRequired { get; set; }
 
         #endregion
 
@@ -87,7 +92,6 @@ namespace Twino.Core
         /// </summary>
         protected SocketBase()
         {
-            PongTime = DateTime.UtcNow.AddSeconds(15);
         }
 
         /// <summary>
@@ -95,7 +99,6 @@ namespace Twino.Core
         /// </summary>
         protected SocketBase(IConnectionInfo info)
         {
-            PongTime = DateTime.UtcNow.AddSeconds(15);
             IsSsl = info.IsSsl;
             IsConnected = true;
             Stream = info.GetStream();
@@ -148,8 +151,8 @@ namespace Twino.Core
                 if (Stream == null || data == null)
                     return false;
 
-                LastAliveDate = DateTime.UtcNow;
                 await Stream.WriteAsync(data);
+                LastAliveDate = DateTime.UtcNow;
                 return true;
             }
             catch
@@ -168,9 +171,7 @@ namespace Twino.Core
             {
                 if (Stream == null || data == null)
                     return false;
-
-                LastAliveDate = DateTime.UtcNow;
-
+                
                 if (IsSsl)
                 {
                     lock (Stream)
@@ -187,6 +188,7 @@ namespace Twino.Core
                 else
                     Stream.BeginWrite(data, 0, data.Length, EndWrite, data);
 
+                LastAliveDate = DateTime.UtcNow;
                 return true;
             }
             catch
@@ -219,6 +221,15 @@ namespace Twino.Core
             }, "");
         }
 
+        /// <summary>
+        /// Updates socket alive date
+        /// </summary>
+        public void KeepAlive()
+        {
+            LastAliveDate = DateTime.UtcNow;
+            PongRequired = false;
+        }
+        
         #endregion
 
         #region Abstract Methods
@@ -303,7 +314,7 @@ namespace Twino.Core
         /// </summary>
         /// <returns></returns>
         public abstract void Pong();
-
+        
         #endregion
     }
 }
