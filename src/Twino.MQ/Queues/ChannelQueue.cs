@@ -620,6 +620,9 @@ namespace Twino.MQ.Queues
         /// </summary>
         public async Task Trigger()
         {
+            if (Channel.ClientsCount() == 0)
+                return;
+            
             if (_triggering)
                 return;
 
@@ -791,7 +794,7 @@ namespace Twino.MQ.Queues
             //after all sending operations completed, calls implementation send completed method and complete the operation
             if (messageIsSent)
                 Info.AddMessageSend();
-            
+
             message.Decision = await DeliveryHandler.EndSend(this, message);
             await ApplyDecision(message.Decision, message);
 
@@ -815,16 +818,16 @@ namespace Twino.MQ.Queues
 
             if (decision.Allow)
                 allow = true;
-            
+
             if (decision.KeepMessage)
                 keep = true;
-            
+
             if (decision.SaveMessage)
                 save = true;
-            
+
             if (decision.SendAcknowledge == DeliveryAcknowledgeDecision.Always)
                 ack = DeliveryAcknowledgeDecision.Always;
-            
+
             else if (decision.SendAcknowledge == DeliveryAcknowledgeDecision.IfSaved && final.SendAcknowledge == DeliveryAcknowledgeDecision.None)
                 ack = DeliveryAcknowledgeDecision.IfSaved;
 
