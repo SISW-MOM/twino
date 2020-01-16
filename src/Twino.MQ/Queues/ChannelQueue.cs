@@ -296,12 +296,8 @@ namespace Twino.MQ.Queues
                 if (Options.UseMessageId)
                     message.SetMessageId(Channel.Server.MessageIdGenerator.Create());
 
-                message.Content = new MemoryStream();
-                string json = Newtonsoft.Json.JsonConvert.SerializeObject(item);
-                await message.Content.WriteAsync(Encoding.UTF8.GetBytes(json));
-
-                message.CalculateLengths();
-
+                await message.SetJsonContent(item);
+                
                 QueueMessage qm = new QueueMessage(message, createAsSaved);
 
                 if (highPriority)
@@ -330,10 +326,7 @@ namespace Twino.MQ.Queues
                     message.SetMessageId(Channel.Server.MessageIdGenerator.Create());
 
                 action(message, item);
-
-                message.Content = new MemoryStream();
-                await System.Text.Json.JsonSerializer.SerializeAsync(message.Content, item);
-                message.CalculateLengths();
+                await message.SetJsonContent(item);
 
                 QueueMessage qm = new QueueMessage(message, createAsSaved);
 
