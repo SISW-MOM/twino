@@ -162,7 +162,7 @@ namespace Twino.MQ.Queues
                 if (tuple.Item1)
                 {
                     delivery.MarkAsAcknowledgeTimedUp();
-                    _queue.Info.AddAcknowledgeTimeout();
+                    _queue.Info.AddUnacknowledge();
                     Decision decision = await _queue.DeliveryHandler.AcknowledgeTimedOut(_queue, delivery);
 
                     if (delivery.Message != null)
