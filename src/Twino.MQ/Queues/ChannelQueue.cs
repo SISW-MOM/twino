@@ -314,7 +314,40 @@ namespace Twino.MQ.Queues
         }
 
         /// <summary>
-        /// Fills JSON object data to the queue
+        /// Fills JSON object data to the queue.
+        /// Creates new TmqMessage and before writing content and adding into queue calls the action.
+        /// </summary>
+        public async Task FillJson<T>(IEnumerable<T> items, bool createAsSaved, Action<TmqMessage, T> action) where T : class
+        {
+            foreach (T item in items)
+            {
+                TmqMessage message = new TmqMessage(MessageType.Channel, Channel.Name);
+                message.FirstAcquirer = true;
+                message.AcknowledgeRequired = Options.RequestAcknowledge;
+                message.ContentType = Id;
+
+                if (Options.UseMessageId)
+                    message.SetMessageId(Channel.Server.MessageIdGenerator.Create());
+
+                action(message, item);
+
+                message.Content = new MemoryStream();
+                await System.Text.Json.JsonSerializer.SerializeAsync(message.Content, item);
+                message.CalculateLengths();
+
+                QueueMessage qm = new QueueMessage(message, createAsSaved);
+
+                if (message.HighPriority)
+                    lock (HighPriorityLinkedList)
+                        HighPriorityLinkedList.AddLast(qm);
+                else
+                    lock (RegularLinkedList)
+                        RegularLinkedList.AddLast(qm);
+            }
+        }
+
+        /// <summary>
+        /// Fills string data to the queue
         /// </summary>
         public void FillString(IEnumerable<string> items, bool createAsSaved, bool highPriority)
         {
@@ -345,7 +378,7 @@ namespace Twino.MQ.Queues
         }
 
         /// <summary>
-        /// Fills JSON object data to the queue
+        /// Fills binary data to the queue
         /// </summary>
         public void FillData(IEnumerable<byte[]> items, bool createAsSaved, bool highPriority)
         {
@@ -622,7 +655,7 @@ namespace Twino.MQ.Queues
         {
             if (Channel.ClientsCount() == 0)
                 return;
-            
+
             if (_triggering)
                 return;
 
