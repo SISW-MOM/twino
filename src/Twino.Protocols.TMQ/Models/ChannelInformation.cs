@@ -79,7 +79,6 @@ namespace Twino.Protocols.TMQ.Models
         /// Zero is unlimited
         /// </summary>
         [JsonProperty("clientLimit")]
-        [JsonPropertyName("clientLimit")]
         public int ClientLimit { get; set; }
         
         /// <summary>
@@ -87,14 +86,12 @@ namespace Twino.Protocols.TMQ.Models
         /// Zero is unlimited
         /// </summary>
         [JsonProperty("queueLimit")]
-        [JsonPropertyName("queueLimit")]
         public int QueueLimit { get; set; }
 
         /// <summary>
         /// If true, channel will be destroyed when there are no messages in queues and there are no consumers available
         /// </summary>
         [JsonProperty("destroyWhenEmpty")]
-        [JsonPropertyName("destroyWhenEmpty")]
         public bool DestroyWhenEmpty { get; set; }
 
     }
