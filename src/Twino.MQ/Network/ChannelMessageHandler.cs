@@ -1,4 +1,3 @@
-using System.Threading;
 using System.Threading.Tasks;
 using Twino.MQ.Clients;
 using Twino.MQ.Helpers;
@@ -55,13 +54,11 @@ namespace Twino.MQ.Network
             //consumer is trying to pull from the queue
             //in false cases, we won't send any response, cuz client is pending only queue messages, not response messages
             if (message.Length == 0 && message.ResponseRequired)
-                ThreadPool.QueueUserWorkItem(async h => { await HandlePullRequest(h.Client, h.Message, h.Channel, h.Queue); },
-                                                   new HandleData(client, message, channel, queue), false);
+                await HandlePullRequest(client, message, channel, queue);
 
             //message have a content, this is the real message from producer to the queue
             else
-                ThreadPool.QueueUserWorkItem(async h => { await HandlePush(h.Client, h.Message, h.Queue); },
-                                                   new HandleData(client, message, null, queue), false);
+                await HandlePush(client, message, queue);
         }
 
         /// <summary>

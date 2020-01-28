@@ -150,7 +150,6 @@ namespace Twino.Protocols.TMQ.Models
         /// Zero is unlimited
         /// </summary>
         [JsonProperty("messageLimit")]
-        [JsonPropertyName("messageLimit")]
         public int MessageLimit { get; set; }
     }
 }
