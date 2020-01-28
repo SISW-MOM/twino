@@ -30,8 +30,8 @@ namespace Test.Mq
             Assert.True(client.IsConnected);
             reader.Attach(client);
 
-            bool joined = await client.Join("ch-1", true);
-            Assert.True(joined);
+            TmqResponseCode joined = await client.Join("ch-1", true);
+            Assert.Equal(TmqResponseCode.Ok, joined);
             await Task.Delay(1000);
 
             MessageA m = new MessageA("Msg-A");
@@ -58,10 +58,10 @@ namespace Test.Mq
             await client.ConnectAsync("tmq://localhost:42802");
             Assert.True(client.IsConnected);
 
-            bool joined = await client.Join("ch-1", true);
-            Assert.True(joined);
+            TmqResponseCode joined = await client.Join("ch-1", true);
+            Assert.Equal(TmqResponseCode.Ok, joined);
             joined = await client.Join("ch-0", true);
-            Assert.True(joined);
+            Assert.Equal(TmqResponseCode.Ok, joined);
 
             await Task.Delay(250);
 
@@ -97,8 +97,8 @@ namespace Test.Mq
             await client.ConnectAsync("tmq://localhost:42803");
             Assert.True(client.IsConnected);
 
-            bool joined = await client.Join("ch-1", true);
-            Assert.True(joined);
+            TmqResponseCode joined = await client.Join("ch-1", true);
+            Assert.Equal(TmqResponseCode.Ok, joined);
 
             await Task.Delay(250);
 
@@ -152,8 +152,8 @@ namespace Test.Mq
             Assert.True(client.IsConnected);
             reader.Attach(client);
 
-            bool joined = await client.Join("ch-1", true);
-            Assert.True(joined);
+            TmqResponseCode joined = await client.Join("ch-1", true);
+            Assert.Equal(TmqResponseCode.Ok, joined);
             await Task.Delay(1000);
 
             MessageA m = new MessageA("Msg-A");

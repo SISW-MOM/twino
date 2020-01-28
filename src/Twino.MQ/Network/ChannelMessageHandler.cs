@@ -9,22 +9,6 @@ namespace Twino.MQ.Network
 {
     internal class ChannelMessageHandler : INetworkMessageHandler
     {
-        private struct HandleData
-        {
-            public MqClient Client;
-            public TmqMessage Message;
-            public Channel Channel;
-            public ChannelQueue Queue;
-
-            public HandleData(MqClient client, TmqMessage message, Channel channel, ChannelQueue queue)
-            {
-                Client = client;
-                Message = message;
-                Channel = channel;
-                Queue = queue;
-            }
-        }
-
         #region Fields
 
         /// <summary>

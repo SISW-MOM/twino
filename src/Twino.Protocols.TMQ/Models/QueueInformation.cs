@@ -144,5 +144,13 @@ namespace Twino.Protocols.TMQ.Models
         /// </summary>
         [JsonProperty("lastMsgSent")]
         public long LastMessageSent { get; set; }
+
+        /// <summary>
+        /// Maximum message limit of the queue
+        /// Zero is unlimited
+        /// </summary>
+        [JsonProperty("messageLimit")]
+        [JsonPropertyName("messageLimit")]
+        public int MessageLimit { get; set; }
     }
 }
